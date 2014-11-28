@@ -14,7 +14,7 @@ import (
     "strconv"
 )
 
-func NewError(format string, args ...interface{}) error {
+func NewErr(format string, args ...interface{}) error {
     var buf bytes.Buffer
     _, fname, lno, ok := runtime.Caller(1)
     if !ok {
@@ -25,4 +25,13 @@ func NewError(format string, args ...interface{}) error {
 
     // errors.go:15 => some error
     return errors.New(fname + ":" + strconv.Itoa(lno) + "=>" + string(buf.Bytes()))
+}
+
+func WrapErr(err error) error {
+    _, fname, lno, ok := runtime.Caller(1)
+    if !ok {
+        fname, lno = "unkown", -1
+    }
+
+    return errors.New(fname + ":" + strconv.Itoa(lno) + "<=" + err.Error())
 }
