@@ -7,31 +7,31 @@
 package goutils
 
 import (
-    "testing"
+	"testing"
 )
 
 func a() error {
-    return NewErr("a()")
+	return NewErr("a()")
 }
 
 func b() error {
-    if err := a(); err != nil {
-        return WrapErr(err)
-    }
+	if err := a(); err != nil {
+		return WrapErr(err)
+	}
 
-    return nil
+	return nil
 }
 
 func c() error {
-    return WrapErr(b())
+	return WrapErr(b())
 }
 
 func d() error {
-    return WrapErr(c())
+	return WrapErr(c())
 }
 
 func TestWarpErr(t *testing.T) {
-    err := d()
-    t.Log(err.(*wrapedError).depth)
-    t.Log(err)
+	err := d()
+	t.Log(err.(*wrapedError).depth)
+	t.Log(err)
 }
