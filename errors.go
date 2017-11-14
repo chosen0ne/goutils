@@ -64,6 +64,7 @@ func NewErr(format string, args ...interface{}) error {
 	return errors.New(position(fname, lno) + " => " + string(buf.Bytes()))
 }
 
+// WrapErr will wrap an error with the stack trace information.
 func WrapErr(err error) error {
 	_, fname, lno, ok := runtime.Caller(1)
 	if !ok {
@@ -73,6 +74,7 @@ func WrapErr(err error) error {
 	return newWrapErr(err, fname, lno, "")
 }
 
+// WrapErr like WrapErr which support an extra message.
 func WrapErrorf(err error, format string, args ...interface{}) error {
 	buf := &bytes.Buffer{}
 	fmt.Fprintf(buf, format, args...)
