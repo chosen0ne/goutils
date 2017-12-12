@@ -26,28 +26,28 @@ func DumpInt64(val int64) []byte {
 	b := &bytes.Buffer{}
 
 	var signBit byte = 0x0
-	if i < 0 {
+	if val < 0 {
 		signBit = 0x40
-		i = 0 - i
+		val = 0 - val
 	}
 
 	isFirstByte := true
-	for i != 0 {
+	for val != 0 {
 		var val byte
 		if isFirstByte {
 			// First two bits is special:
 			// The first one is used to indicate wheather the next byte is included or not.
 			// The second one is the sign bit uesed to indicate the number is negative or not.
-			val = byte(i&0x3f) | signBit
-			i >>= 6
+			val = byte(val&0x3f) | signBit
+			val >>= 6
 			isFirstByte = false
 		} else {
-			val = byte(i & 0x7f)
-			i >>= 7
+			val = byte(val & 0x7f)
+			val >>= 7
 		}
 
 		// bit for next byte
-		if i != 0 {
+		if val != 0 {
 			val |= 0x80
 		}
 		b.WriteByte(val)
@@ -58,7 +58,7 @@ func DumpInt64(val int64) []byte {
 
 func LoadInt64(buf []byte) int64 {
 	bytesCount := 1
-	for i := 0; b[i]&0x80 == 0x80; i++ {
+	for i := 0; buf[i]&0x80 == 0x80; i++ {
 		bytesCount++
 	}
 
@@ -66,11 +66,11 @@ func LoadInt64(buf []byte) int64 {
 	var signBit byte
 	for i := 0; i < bytesCount; i++ {
 		if i == 0 {
-			signBit = byte(0x40 & b[i])
-			v |= int64(b[i] & 0x3f)
+			signBit = byte(0x40 & buf[i])
+			v |= int64(buf[i] & 0x3f)
 		} else {
 			bitsMove := 6 + (7 * (i - 1))
-			v |= int64(b[i]&0x7f) << uint(bitsMove)
+			v |= int64(buf[i]&0x7f) << uint(bitsMove)
 		}
 	}
 
