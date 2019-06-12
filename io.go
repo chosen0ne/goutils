@@ -12,10 +12,14 @@ import (
 
 func Write(l Logger, w io.Writer, b []byte) error {
 	if n, err := w.Write(b); err != nil {
-		l.Exception(err, "failed to write")
+		if l != nil {
+			l.Exception(err, "failed to write")
+		}
 		return err
 	} else if n != len(b) {
-		l.Error("failed to write a whole buffer, buf: %d, write: %d", len(b), n)
+		if l != nil {
+			l.Error("failed to write a whole buffer, buf: %d, write: %d", len(b), n)
+		}
 		return NewErr("failed to write a whole buffer, buf: %d, write: %d", len(b), n)
 	}
 
