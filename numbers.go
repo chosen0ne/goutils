@@ -12,6 +12,178 @@ import (
 	"io"
 )
 
+const (
+	BIG_ENDIAN = iota
+	LITTLE_ENDIAN
+)
+
+var (
+	// BytesOrder is the byte order of the matchine
+	BytesOrder int
+)
+
+func intToBytes(v int64, nBytes int, bytesOrder int) []byte {
+	b := make([]byte, nBytes)
+	var s, inc int
+	if bytesOrder == BIG_ENDIAN {
+		s, inc = nBytes-1, -1
+	} else {
+		s, inc = 0, 1
+	}
+
+	for i := 0; i < nBytes; i++ {
+		b[i] = byte((v >> uint(s*8)) & 0xff)
+		s += inc
+	}
+
+	return b
+}
+
+func BytesToInt(b []byte, bytesOrder int) int64 {
+	var v int64 = 0
+	if bytesOrder == BIG_ENDIAN {
+		for i := 0; i < len(b); i++ {
+			v = (v << 8) | int64(b[i])
+		}
+	} else {
+		for i := len(b) - 1; i >= 0; i-- {
+			v = (v << 8) | int64(b[i])
+		}
+	}
+
+	return v
+}
+
+// write int64 as little endian
+func WriteFixedInt64(i int64, w io.Writer) error {
+	o := intToBytes(i, 8, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteFixedInt32(i int32, w io.Writer) error {
+	o := intToBytes(int64(i), 4, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteFixedInt16(i int16, w io.Writer) error {
+	o := intToBytes(int64(i), 2, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadFixedInt64(r io.Reader) (int64, error) {
+	in := make([]byte, 8)
+
+	if err := ReadBuffer(nil, r, in); err != nil {
+		return -1, err
+	}
+
+	v := BytesToInt(in, BytesOrder)
+
+	return v, nil
+}
+
+func ReadFixedInt32(r io.Reader) (int32, error) {
+	in := make([]byte, 4)
+
+	if err := ReadBuffer(nil, r, in); err != nil {
+		return -1, err
+	}
+
+	v := BytesToInt(in, BytesOrder)
+
+	return int32(v), nil
+}
+
+func ReadFixedInt16(r io.Reader) (int16, error) {
+	in := make([]byte, 2)
+
+	if err := ReadBuffer(nil, r, in); err != nil {
+		return -1, err
+	}
+
+	v := BytesToInt(in, BytesOrder)
+
+	return int16(v), nil
+}
+
+func DumpFixedInt64(i int64) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedInt64(i, b); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func DumpFixedInt32(i int32) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedInt32(i, b); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func DumpFixedInt16(i int16) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedInt16(i, b); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func LoadFixedInt64(buf []byte) (int64, error) {
+	b := bytes.NewBuffer(buf)
+
+	v, err := ReadFixedInt64(b)
+	if err != nil {
+		return -1, err
+	}
+
+	return v, nil
+}
+
+func LoadFixedInt32(buf []byte) (int32, error) {
+	b := bytes.NewBuffer(buf)
+
+	v, err := ReadFixedInt32(b)
+	if err != nil {
+		return -1, err
+	}
+
+	return v, nil
+}
+
+func LoadFixedInt16(buf []byte) (int16, error) {
+	b := bytes.NewBuffer(buf)
+
+	v, err := ReadFixedInt16(b)
+	if err != nil {
+		return -1, err
+	}
+
+	return v, nil
+}
+
 // WriteInt64 can write a int64 value to io.Writer.
 // Variable length encoding is used, and the rule is as follows:
 //	1) First bit of each byte is special to indicate wheather the following byte
@@ -78,12 +250,14 @@ func WriteInt64(val int64, w io.Writer) error {
 	return nil
 }
 
-func DumpInt64(val int64) []byte {
+func DumpInt64(val int64) ([]byte, error) {
 	b := &bytes.Buffer{}
 
-	WriteInt64(val, b)
+	if err := WriteInt64(val, b); err != nil {
+		return nil, err
+	}
 
-	return b.Bytes()
+	return b.Bytes(), nil
 }
 
 func ReadInt64(r io.Reader) (int64, error) {
@@ -126,4 +300,13 @@ func LoadInt64(buf []byte) (int64, error) {
 	}
 
 	return val, nil
+}
+
+func init() {
+	n := 0x0102
+	if n&0xff == 0x02 {
+		BytesOrder = BIG_ENDIAN
+	} else {
+		BytesOrder = LITTLE_ENDIAN
+	}
 }
