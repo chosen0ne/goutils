@@ -32,6 +32,8 @@ func TestWriteFixedNum_ok(t *testing.T) {
 	inputs32 := []int32{-1, 0, 1000, 0x010205, -0xff91ea}
 	inputs16 := []int16{-1, 0, 1000, 0x0102, -0x4fff}
 
+	inputsu64 := []uint64{0, 100, 0x0807060504030201, 1000000000, 33333333}
+
 	for _, n := range inputs64 {
 		buf, dumpErr := DumpFixedInt64(n)
 		if dumpErr != nil {
@@ -66,6 +68,20 @@ func TestWriteFixedNum_ok(t *testing.T) {
 			t.Errorf("failed to dump int16, int16: %d, err: %v", n, dumpErr)
 		}
 		loadVal, loadErr := LoadFixedInt16(buf)
+		if loadErr != nil {
+			t.Errorf("failed to load num, err: %v", loadErr)
+		}
+		if n != loadVal {
+			t.Errorf("%d failed, load val: %d\n", n, loadVal)
+		}
+	}
+
+	for _, n := range inputsu64 {
+		buf, dumpErr := DumpFixedUint64(n)
+		if dumpErr != nil {
+			t.Errorf("failed to dump uint64, uint64: %d, err: %v", n, dumpErr)
+		}
+		loadVal, loadErr := LoadFixedUint64(buf)
 		if loadErr != nil {
 			t.Errorf("failed to load num, err: %v", loadErr)
 		}

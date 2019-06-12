@@ -22,6 +22,7 @@ var (
 	BytesOrder int
 )
 
+// intToBytes will serialize v as big-endian based on the local machine byte order
 func intToBytes(v int64, nBytes int, bytesOrder int) []byte {
 	b := make([]byte, nBytes)
 	var s, inc int
@@ -39,6 +40,7 @@ func intToBytes(v int64, nBytes int, bytesOrder int) []byte {
 	return b
 }
 
+// bytesToInt will deserialize []byte which is serialized by intToBytes to int64
 func bytesToInt(b []byte, bytesOrder int) int64 {
 	var v int64 = 0
 	if bytesOrder == BIG_ENDIAN {
@@ -48,6 +50,40 @@ func bytesToInt(b []byte, bytesOrder int) int64 {
 	} else {
 		for i := len(b) - 1; i >= 0; i-- {
 			v = (v << 8) | int64(b[i])
+		}
+	}
+
+	return v
+}
+
+// uintToBytes will serialize v as big-endian based on the local machine byte order
+func uintToBytes(v uint64, nBytes int, bytesOrder int) []byte {
+	b := make([]byte, nBytes)
+	var s, inc int
+	if bytesOrder == BIG_ENDIAN {
+		s, inc = nBytes-1, -1
+	} else {
+		s, inc = 0, 1
+	}
+
+	for i := 0; i < nBytes; i++ {
+		b[i] = byte((v >> uint(s*8)) & 0xff)
+		s += inc
+	}
+
+	return b
+}
+
+// bytesToUint will deserialize []byte which is serialized by uintToBytes to int64
+func bytesToUint(b []byte, bytesOrder int) uint64 {
+	var v uint64 = 0
+	if bytesOrder == BIG_ENDIAN {
+		for i := 0; i < len(b); i++ {
+			v = (v << 8) | uint64(b[i])
+		}
+	} else {
+		for i := len(b) - 1; i >= 0; i-- {
+			v = (v << 8) | uint64(b[i])
 		}
 	}
 
@@ -121,6 +157,66 @@ func ReadFixedInt16(r io.Reader) (int16, error) {
 	return int16(v), nil
 }
 
+func WriteFixedUint64(i uint64, w io.Writer) error {
+	o := uintToBytes(i, 8, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteFixedUint32(i uint32, w io.Writer) error {
+	o := uintToBytes(uint64(i), 4, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteFixedUint16(i uint16, w io.Writer) error {
+	o := uintToBytes(uint64(i), 2, BytesOrder)
+
+	if err := WriteBuffer(nil, w, o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadFixedUint64(r io.Reader) (uint64, error) {
+	b := make([]byte, 8)
+
+	if err := ReadBuffer(nil, r, b); err != nil {
+		return 0, err
+	}
+
+	return bytesToUint(b, BytesOrder), nil
+}
+
+func ReadFixedUint32(r io.Reader) (uint32, error) {
+	b := make([]byte, 4)
+
+	if err := ReadBuffer(nil, r, b); err != nil {
+		return 0, err
+	}
+
+	return uint32(bytesToUint(b, BytesOrder)), nil
+}
+
+func ReadFixedUint16(r io.Reader) (uint16, error) {
+	b := make([]byte, 2)
+
+	if err := ReadBuffer(nil, r, b); err != nil {
+		return 0, err
+	}
+
+	return uint16(bytesToUint(b, BytesOrder)), nil
+}
+
 func DumpFixedInt64(i int64) ([]byte, error) {
 	b := &bytes.Buffer{}
 
@@ -154,34 +250,67 @@ func DumpFixedInt16(i int16) ([]byte, error) {
 func LoadFixedInt64(buf []byte) (int64, error) {
 	b := bytes.NewBuffer(buf)
 
-	v, err := ReadFixedInt64(b)
-	if err != nil {
-		return -1, err
-	}
-
-	return v, nil
+	return ReadFixedInt64(b)
 }
 
 func LoadFixedInt32(buf []byte) (int32, error) {
 	b := bytes.NewBuffer(buf)
 
-	v, err := ReadFixedInt32(b)
-	if err != nil {
-		return -1, err
-	}
-
-	return v, nil
+	return ReadFixedInt32(b)
 }
 
 func LoadFixedInt16(buf []byte) (int16, error) {
 	b := bytes.NewBuffer(buf)
 
-	v, err := ReadFixedInt16(b)
-	if err != nil {
-		return -1, err
+	return ReadFixedInt16(b)
+}
+
+func DumpFixedUint64(i uint64) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedUint64(i, b); err != nil {
+		return nil, err
 	}
 
-	return v, nil
+	return b.Bytes(), nil
+}
+
+func DumpFixedUint32(i uint32) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedUint32(i, b); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func DumpFixedUint16(i uint16) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	if err := WriteFixedUint16(i, b); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+func LoadFixedUint64(buf []byte) (uint64, error) {
+	b := bytes.NewBuffer(buf)
+
+	return ReadFixedUint64(b)
+}
+
+func LoadFixedUint32(buf []byte) (uint32, error) {
+	b := bytes.NewBuffer(buf)
+
+	return ReadFixedUint32(b)
+}
+
+func LoadFixedUint16(buf []byte) (uint16, error) {
+	b := bytes.NewBuffer(buf)
+
+	return ReadFixedUint16(b)
 }
 
 // WriteInt64 can write a int64 value to io.Writer.
