@@ -39,7 +39,7 @@ func intToBytes(v int64, nBytes int, bytesOrder int) []byte {
 	return b
 }
 
-func BytesToInt(b []byte, bytesOrder int) int64 {
+func bytesToInt(b []byte, bytesOrder int) int64 {
 	var v int64 = 0
 	if bytesOrder == BIG_ENDIAN {
 		for i := 0; i < len(b); i++ {
@@ -92,7 +92,7 @@ func ReadFixedInt64(r io.Reader) (int64, error) {
 		return -1, err
 	}
 
-	v := BytesToInt(in, BytesOrder)
+	v := bytesToInt(in, BytesOrder)
 
 	return v, nil
 }
@@ -104,7 +104,7 @@ func ReadFixedInt32(r io.Reader) (int32, error) {
 		return -1, err
 	}
 
-	v := BytesToInt(in, BytesOrder)
+	v := bytesToInt(in, BytesOrder)
 
 	return int32(v), nil
 }
@@ -116,7 +116,7 @@ func ReadFixedInt16(r io.Reader) (int16, error) {
 		return -1, err
 	}
 
-	v := BytesToInt(in, BytesOrder)
+	v := bytesToInt(in, BytesOrder)
 
 	return int16(v), nil
 }
