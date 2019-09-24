@@ -18,6 +18,8 @@ type Future interface {
 	GetTimeout(timeout time.Duration) interface{}
 	// Wheather the task is done or not.
 	IsDone() bool
+	// Ouput data used by producer
+	Output(interface{})
 }
 
 type FutureTask struct {

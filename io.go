@@ -39,7 +39,7 @@ func ReadBuffer(l Logger, r io.Reader, b []byte) error {
 		return NewErr("invalid params")
 	}
 
-	if n, err := r.Read(b); err != nil {
+	if n, err := io.ReadFull(r, b); err != nil {
 		if l != nil {
 			l.Exception(err, "failed to read")
 		}

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 // wrapedError is uesed to wrap an error, and show the stacktrace
@@ -31,8 +32,11 @@ func (we wrapedError) Error() string {
 
 	// msg for current error: we
 	b.WriteString(position(we.fname, we.lno))
-	b.WriteString(" => ")
-	b.WriteString(we.msg)
+	if strings.Trim(we.msg, " ") != "" {
+		b.WriteString("[")
+		b.WriteString(we.msg)
+		b.WriteString("]")
+	}
 
 	switch we.err.(type) {
 	case wrapedError:
@@ -40,7 +44,7 @@ func (we wrapedError) Error() string {
 	case *wrapedError:
 		b.WriteString("\r\n")
 	case error:
-		b.WriteString("=> ")
+		b.WriteString(" => ")
 	}
 
 	// msg for nested error
